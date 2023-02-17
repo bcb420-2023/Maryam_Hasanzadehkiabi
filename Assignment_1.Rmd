@@ -1,0 +1,256 @@
+---
+title: "BCB420 Assignment 1"
+subtitle: "Dataset Selection and Initial Processing" 
+author: "Maryam Hasanzadehkiabi"
+date: "r Sys.Date()"
+output:
+    html_document:
+        toc: TRUE
+        toc_depth: 2
+bibliography: assignment_1.bib
+csl: biomed-central.csl
+---
+
+rmarkdown is a frresecond [@li 2021]
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+# Insert required packages
+```{r message = FALSE, warning = FALSE, echo = FALSE, eval = FALSE}
+if (!requireNamespace("rmarkdown", quietly = TRUE))
+    +     install.packages("rmarkdown")
+if (!requireNamespace("knitr", quietly = TRUE))
+    +     install.packages("knitr")
+if (!requireNamespace("pandoc", quietly = TRUE))
+    +     install.packages("pandoc")
+if (!requireNamespace("devtools", quietly = TRUE))
+    +     install.packages("devtools")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    +     install.packages("BiocManager")
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+if (!requireNamespace("biomaRt", quietly = TRUE))
+    BiocManager::install("biomaRt")
+if (!requireNamespace("GEOmetadb", quietly = TRUE))
+    BiocManager::install("GEOmetadb")
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    +     install.packages("GEOquery")
+if (!requireNamespace("DBI", quietly = TRUE))
+    +     install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE))
+    +     install.packages("RSQLite")
+if(!requireNamespace("kableExtra", quietly=TRUE))
+    install.packages("kableExtra")
+```
+#Run Libraries
+```{r message = FALSE, warning = FALSE, echo = FALSE, eval = FALSE}
+library(devtools)
+library(rmarkdown)
+library(knitr)
+library(pandoc)
+library(BiocManager)
+library(GEOmetadb)
+library(GEOquery)
+library(DBI)
+library(RSQLite)
+library(edgeR)
+library(biomaRt)
+library(kableExtra)
+```
+#Dataset selection
+#Selection criteria:
+    #RNASeq data
+    #within the last 5 years
+    #limited to human
+    #number of samples more than 6
+    #related to Metabolic Syndrom
+```{r}
+sql <- paste("SELECT DISTINCT gse.title,gse.gse, gpl.title,",
+             " gse.submission_date,",
+             " gse.supplementary_file", 
+             "FROM",
+             "  gse JOIN gse_gpl ON gse_gpl.gse=gse.gse",
+             "  JOIN gpl ON gse_gpl.gpl=gpl.gpl",
+             "WHERE",
+             "  gse.submission_date > '2013-01-01' AND", 
+             "  gse.title LIKE '%Metabolic Syndrome%' AND", 
+             "  gpl.organism LIKE '%Homo sapiens%' AND",
+             "  gpl.technology LIKE '%high-throughput sequencing%' ",
+             "  ORDER BY gse.submission_date DESC",sep=" ")
+```
+
+```{r}
+con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
+rs <- dbGetQuery(con,sql)
+counts_files <- rs$supplementary_file[grep(rs$supplementary_file,
+                              pattern = "count|cnt",ignore.case = TRUE)]
+
+series_of_interest <- rs$gse[grep(rs$supplementary_file,
+                              pattern = "count|cnt",ignore.case = TRUE)]
+
+shortened_filenames <- unlist(lapply(counts_files,
+             FUN = function(x){x <- unlist(strsplit(x,";")) ;
+              x <- x[grep(x,pattern= "count|cnt",ignore.case = TRUE)];
+               tail(unlist(strsplit(x,"/")),n=1)}))
+shortened_filenames[1:10]
+```
+#
+```{r}
+num_series <- dbGetQuery(con, 
+                         paste("select * from gsm where series_id in ('", 
+                               paste(series_of_interest,collapse="','"), 
+                               "')", collapse = ""))
+gse.count <- as.data.frame(table(num_series$series_id))
+series_of_interest_with_counts <- gse.count[which(gse.count$Freq>6),1]
+gse.count[which(gse.count$Freq>6),]
+```
+#dataset samples
+```{r message = FALSE, warning = FALSE, echo = FALSE, eval = FALSE}
+gse <- getGEO("GSE166474",GSEMatrix=FALSE)
+kable(data.frame(head(Meta(gse))), format = "pipe")
+names(GSMList(gse))
+show(getGEO("GSE166474",GSEMatrix=TRUE))
+show(pData(phenoData((getGEO("GSE166474",GSEMatrix=TRUE)[[1]]))[,c(1,6,8)]))
+```
+
+#
+```{r pressure, echo=FALSE}
+current_gpl <- names(GPLList(gse))[1]
+current_gpl_info <- Meta(getGEO(current_gpl))
+current_gpl_info$title
+current_gpl_info$last_update_date
+current_gpl_info$organism
+length(current_gpl_info$series_id)
+length(current_gpl_info$sample_id)
+```
+# The expression data
+```{r message = FALSE, warning = FALSE, echo = FALSE, eval = FALSE}
+sfiles = getGEOSuppFiles('GSE166474')
+fnames = rownames(sfiles)
+```
+# Data table information
+```{r}
+data_table = read.delim(fnames[1],header=TRUE,
+          check.names = FALSE)
+##data_table2 = read.table(fnames[1],header=TRUE,
+##           check.names=FALSE)
+##data_table3 = read.table(fnames[1],header=TRUE,
+##           check.names=TRUE,nrows = 1)[1,]
+```
+#Table info
+```{r}
+#kable(data_table[1:15,], format = "pipe")
+data_table[1:15, 1:4] %>%
+    kableExtra::kbl(caption = "Expressed lncRNA") %>%
+    kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+```
+#Number of genes
+```{r}
+dim(data_table)
+colnames(data_table)[1] <- "ensembl_id"
+colnames(data_table)
+```
+#col naming
+```{r}
+samples <- data.frame(lapply(colnames(data_table)[2:11],
+                             FUN=function(x){unlist(strsplit(x,
+                            split = "\\_"))[c(1,2)]}))
+colnames(samples) <- colnames(data_table)[2:11]
+rownames(samples) <- c("Case", "Seq")
+samples <- data.frame(t(samples))
+```
+#sort genes
+```{r}
+data_table_valid <- data_table[grep("ENSG", data_table$ensembl_id),]
+summarized_gene_counts <- sort(table(data_table_valid$ensembl_id),
+                               decreasing = TRUE)
+kable(table(data_table$ensembl_id)[1:3], format="pipe")
+data_table_valid[1:5, 1:4] %>%
+    kableExtra::kbl(caption = "Sorted") %>%
+    kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+kable(summarized_gene_counts[which(summarized_gene_counts>1)[1:10]], format = "pipe")
+```
+#checking potentila gene duplications
+```{r}
+summary(duplicated(data_table_valid$ensembl_id))
+```
+#filtering noises
+```{r}
+cpms = cpm(data_table_valid[, 2:11])
+rownames(cpms) <- data_table_valid[,1]
+keep = rowSums(cpms >1) >=5
+data_table_filtered = data_table_valid[keep,]
+filtered_results <- data.frame(data_table = nrow(data_table), data_table_valid = nrow(data_table_valid), data_table_filtered = nrow(data_table_filtered))
+rownames(filtered_results)[1] <- "Number of Genes"
+filtered_results %>%
+  kableExtra::kbl(caption = "Filtered lncRNA Expression") %>%
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+```
+```{r}
+summarized_gene_counts_filtered <- sort(table(data_table_filtered$ensembl_id), 
+                                              decreasing = TRUE)
+#kable(summarized_gene_counts_filtered[
+#    which(summarized_gene_counts_filtered>1)[1:10]], 
+#    format="pipe")
+summarized_gene_counts_filtered>1%>%
+    kableExtra::kbl(caption = "Filtered Ensemble Genes") %>%
+    kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+```
+```{r}
+data2plot <- log2(cpm(data_table_filtered[,2:11]))
+boxplot(data2plot, xlab = "Samples", ylab = "log2 CPM",
+las = 2, cex = 0.5, cex.lab = 0.5,
+cex.axis = 0.5, main = "EVs RNASeq Samples")
+abline(h = median(apply(data2plot, 2, median)),
+col = "green", lwd = 0.6, lty = "dashed")
+```
+```{r}
+counts_density <- apply(log2(cpm(data_table_filtered[,2:11])),
+2, density)
+#calculate the limits across all the samples
+xlim <- 0; ylim <- 0
+for (i in 1:length(counts_density)) {
+xlim <- range(c(xlim, counts_density[[i]]$x));
+ylim <- range(c(ylim, counts_density[[i]]$y))
+}
+cols <- rainbow(length(counts_density))
+ltys <- rep(1, length(counts_density))
+#plot the first density plot to initialize the plot
+plot(counts_density[[1]], xlim=xlim, ylim=ylim, type="n",
+ylab="Smoothing density of log2-CPM",
+main="", cex.lab = 0.85)
+#plot each line
+for (i in 1:length(counts_density))
+lines(counts_density[[i]], col=cols[i], lty=ltys[i])
+#create legend
+legend("topright", colnames(data2plot),
+col=cols, lty=ltys, cex=0.75,
+border ="blue", text.col = "green4",
+merge = TRUE, bg = "gray90")
+```
+```{r}
+plotMA(log2(data_table_filtered[,c(2,3)]), ylab="M - ratio log expression",
+main="CA125 + vs - - example")
+```
+```{r}
+filtered_data_matrix <- as.matrix(data_table_filtered[,2:11])
+rownames(filtered_data_matrix) <- data_table_filtered$ensembl_id
+d = DGEList(counts=filtered_data_matrix, group=samples$cell_type)
+```
+```{r}
+d = calcNormFactors(d)
+```
+```{r}
+normalized_counts <- cpm(d)
+```
+
+
+
+
+
+
+
+
+
+
