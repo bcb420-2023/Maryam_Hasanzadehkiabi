@@ -8,9 +8,8 @@ Assignments:
 
 A1	HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_draftttt.html
 
-A1 .RMD: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_draftttt.Rmd
+A1 .RMD (draft) : https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_draftttt.Rmd
 
-A2
+A1 RMD (draft 2- still not complete) : https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1.Rmd
 
-A3
 
