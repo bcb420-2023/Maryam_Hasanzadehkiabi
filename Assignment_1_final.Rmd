@@ -133,73 +133,73 @@ The output of the interested series resulted in only one series that holds the s
 
 Number of entities
 
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 gse <- getGEO("GSE166474",GSEMatrix=FALSE)
 ```
 
 Data owner contact information
 
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 kable(data.frame(head(Meta(gse))), format = "pipe")
 ```
 
 Name and number of the samples
 
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 names(GSMList(gse))
 ```
 Series include 10 samples.
 
 More information about the series
 
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 show(getGEO("GSE166474",GSEMatrix=TRUE))
 ```
 
 Samples classification
 
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 data.frame(getGEO("GSE166474",GSEMatrix=TRUE)[[1]])[,c(8)]
 ```
 There are 2 groups, 5 healthy/control individuals and 5 patients with metabolic syndrome. 
 
 ## Platform details
 
-```{r, , echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl <- names(GPLList(gse))[1]
 current_gpl_info <- Meta(getGEO(current_gpl))
 ```
 
 **Platform accession number:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl_info$geo_accession
 ```
 **Platform title:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl_info$title
 ```
 **Submission date:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl_info$submission_date
 ```
 **Last update date:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl_info$last_update_date
 ```
 **Organisms:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl_info$organism
 ```
 **Technology:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 current_gpl_info$technology
 ```
-**Number of GEO datasets that use this technology:*
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+**Number of GEO datasets that use this technology:**
+```{r}
 length(current_gpl_info$series_id)
 ```
 **Number of GEO samples that use this technology:**
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+```{r}
 length(current_gpl_info$sample_id)
 ```
 
