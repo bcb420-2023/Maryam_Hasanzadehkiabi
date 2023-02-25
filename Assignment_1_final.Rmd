@@ -1,0 +1,517 @@
+---
+title: "BCB420 Assignment 1"
+author: "Maryam Hasanzadehkiabi"
+date: '2023-02-21'
+output:
+  html_document:
+    toc: yes
+    toc_depth: 2
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+subtitle: Dataset Selection and Initial Processing
+bibliography: assignment_1.bib
+csl: american-medical-association.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Dataset selection
+
+## Insert and running required packages
+
+[@xie2018r]
+[@allaire2023rmarkdown]
+[@xie2020r]
+[@Zhu2021]
+[@Müller2023]
+[@Wickham2022]
+[@Davis2007]
+[@Morgan2022]
+[@zhu2008geometadb]
+[@durinck2009mapping]
+[@durinck2005biomart]
+[@drost2017biomartr]
+[@loraine2015analysis]
+[@robinson2010edger]
+[@Wickham2022dev]
+[@Dervieux2022]
+[@Xie2023kni]
+[@Xie2015kni]
+[@Stodden2014]
+
+```{r, message=FALSE, warning=FALSE}
+if (!requireNamespace("rmarkdown", quietly = TRUE))
+    +     install.packages("rmarkdown")
+if (!requireNamespace("knitr", quietly = TRUE))
+    +     install.packages("knitr")
+if (!requireNamespace("pandoc", quietly = TRUE))
+    +     install.packages("pandoc")
+if (!requireNamespace("devtools", quietly = TRUE))
+    +     install.packages("devtools")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    +     install.packages("BiocManager")
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+if (!requireNamespace("biomaRt", quietly = TRUE))
+    BiocManager::install("biomaRt")
+if (!requireNamespace("GEOmetadb", quietly = TRUE))
+    BiocManager::install("GEOmetadb")
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    +     install.packages("GEOquery")
+if (!requireNamespace("DBI", quietly = TRUE))
+    +     install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE))
+    +     install.packages("RSQLite")
+if(!requireNamespace("kableExtra", quietly=TRUE))
+    install.packages("kableExtra")
+```
+
+```{r message=FALSE, warning=FALSE}
+library(devtools)
+library(rmarkdown)
+library(knitr)
+library(pandoc)
+library(BiocManager)
+library(GEOmetadb)
+library(GEOquery)
+library(DBI)
+library(RSQLite)
+library(edgeR)
+library(biomaRt)
+library(kableExtra)
+```
+
+## Dataset Selection Criteria
+
+1) RNASeq data 
+2) Within the last 10 years
+3) Limited to human
+4) Number of samples more than 6
+5) Related to Metabolic Syndrome
+
+```{r message=FALSE, warning=FALSE}
+sql <- paste("SELECT DISTINCT gse.title,gse.gse, gpl.title,",
+             " gse.submission_date,",
+             " gse.supplementary_file", 
+             "FROM",
+             "  gse JOIN gse_gpl ON gse_gpl.gse=gse.gse",
+             "  JOIN gpl ON gse_gpl.gpl=gpl.gpl",
+             "WHERE",
+             "  gse.submission_date > '2013-01-01' AND", 
+             "  gse.title LIKE '%Metabolic Syndrome%' AND", 
+             "  gpl.organism LIKE '%Homo sapiens%' AND",
+             "  gpl.technology LIKE '%high-throughput sequencing%' ",
+             "  ORDER BY gse.submission_date DESC",sep=" ")
+```
+
+Selecting series with counts data
+
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+if(!file.exists('GEOmetadb.sqlite')) getSQLiteFile()
+con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
+rs <- dbGetQuery(con,sql)
+counts_files <- rs$supplementary_file[grep(rs$supplementary_file,
+                              pattern = "count|cnt",ignore.case = TRUE)]
+
+series_of_interest <- rs$gse[grep(rs$supplementary_file,
+                              pattern = "count|cnt",ignore.case = TRUE)]
+
+shortened_filenames <- unlist(lapply(counts_files,
+             FUN = function(x){x <- unlist(strsplit(x,";")) ;
+              x <- x[grep(x,pattern= "count|cnt",ignore.case = TRUE)];
+               tail(unlist(strsplit(x,"/")),n=1)}))
+shortened_filenames[1:10]
+```
+
+The output of the interested series resulted in only one series that holds the selection criteria. Therefore, in the following steps, GSE166474 [@li2021differentially] is being checked to find whether it contains sufficient samples to continue further analyses.
+
+## Details of the Selected Series
+
+Number of entities
+
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+gse <- getGEO("GSE166474",GSEMatrix=FALSE)
+```
+
+Data owner contact information
+
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+kable(data.frame(head(Meta(gse))), format = "pipe")
+```
+
+Name and number of the samples
+
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+names(GSMList(gse))
+```
+Series include 10 samples.
+
+More information about the series
+
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+show(getGEO("GSE166474",GSEMatrix=TRUE))
+```
+
+Samples classification
+
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+data.frame(getGEO("GSE166474",GSEMatrix=TRUE)[[1]])[,c(8)]
+```
+There are 2 groups, 5 healthy/control individuals and 5 patients with metabolic syndrome. 
+
+## Platform details
+
+```{r, , echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl <- names(GPLList(gse))[1]
+current_gpl_info <- Meta(getGEO(current_gpl))
+```
+
+**Platform accession number:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl_info$geo_accession
+```
+**Platform title:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl_info$title
+```
+**Submission date:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl_info$submission_date
+```
+**Last update date:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl_info$last_update_date
+```
+**Organisms:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl_info$organism
+```
+**Technology:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+current_gpl_info$technology
+```
+**Number of GEO datasets that use this technology:*
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+length(current_gpl_info$series_id)
+```
+**Number of GEO samples that use this technology:**
+```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
+length(current_gpl_info$sample_id)
+```
+
+# 2. Data expression
+
+Supplementary files
+
+```{r}
+supp_files = getGEOSuppFiles('GSE166474')
+file_names = rownames(supp_files)
+print(file_names)
+```
+There are two supplementary files provided for this dataset, one includes raw counts and the other one contains TPM normalized data [@li2021differentially]. Raw counts file is being used for further analysis. Researchers studied lncRNA, miRNA and mRNA differential expression of extracellular vesicles (EVs), and the effect of metabolic syndrome on their interactions [@li2021differentially]  
+
+Displaying first 10 genes expression on 3 samples
+
+```{r}
+genes_expression = read.delim(file_names[1],header=TRUE,
+          check.names = FALSE)
+genes_expression[1:10, 1:4] %>%
+    kableExtra::kbl(caption = "Genes Expression in 3 samples") %>%
+    kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+```
+
+In the following section, number of the genes and name of the variables included in the dataset are presented; since the first column includes gene IDs without column name, "ensembl_id" is assigned to the first column name.
+
+```{r}
+dim(genes_expression)
+colnames(genes_expression)[1] <- "ensembl_id"
+colnames(genes_expression)
+```
+
+Samples category
+
+There are 2 groups included in the study, "M" indicates metabolic syndrome patients and "N" indicates healthy (normal) individuals. Each group contains 5 samples.
+
+```{r}
+dataSamples <- data.frame(lapply(colnames(genes_expression)[2:11], 
+            FUN = function(x){unlist(strsplit(x,
+                              split = "\\_"))[c(1)]}))
+colnames(dataSamples) <- colnames(genes_expression)[2:11]
+rownames(dataSamples) <- c("Status")
+dataSamples <- data.frame(t(dataSamples))
+```
+
+# 3. Genes cleaning and filtering
+
+## Gene name structure
+Removing genes that do not follow ensembl nomenclature
+
+```{r}
+validGenes <- genes_expression[grep("ENSG", genes_expression$ensembl_id),]
+```
+
+## Duplication
+Checking potential duplication. If the logical output returns any "TRUE" value, there does exist duplication. Otherwise the set contains unique genes.
+
+```{r}
+summary(duplicated(validGenes$ensembl_id))
+```
+Since there is no "TRUE" value in the output, dataset includes only unique genes.
+
+## Outliers
+Noise filtering is performed to keep only genes with at least 1 read per million in 5 samples (i.e. smallest group of replicates). However, since in this dataset, there are many gene expression with value equals to "0", further analyses, specifically log2(cpm) will cause (- infinity) value. 
+
+```{r}
+cpms = cpm(validGenes[,2:11])
+rownames(cpms) <- validGenes$ensembl_id
+keep = rowSums(cpms > 2) >=5
+genes_filtered = validGenes[keep,]
+filtered_results <- data.frame(genes_expression = nrow(genes_expression), validGenes = nrow(validGenes), genes_filtered = nrow(genes_filtered))
+rownames(filtered_results)[1] <- "Number of Genes"
+filtered_results %>%
+  kableExtra::kbl(caption = "Genes count") %>%
+  kableExtra::kable_classic(full_width = F, html_font = "Cambria")
+```
+In this dataset, there is 1 gene that does not follow the standard ensembl nomenclature, and there are 25,488 genes with low counts.
+
+## Data distribution before normalization
+
+Boxplot
+
+```{r warning=FALSE}
+data2plot <- log2(cpm(genes_filtered[,2:11]))
+colnames(data2plot) <- lapply(colnames(genes_filtered)[2:11],
+                              FUN=function(x) {unlist(strsplit(x,
+                              split="\\_"))[c(1)]})
+boxplot(data2plot, xlab = "Samples", ylab = "log2 CPM",
+las = 2, cex = 0.5, cex.lab = 0.5,
+cex.axis = 0.5, main = "Raw Data - Boxplot", col=rainbow(10))
+abline(h = median(apply(data2plot, 2, median)),
+col = "darkgreen", lwd = 1.2, lty = "dashed")
+```
+
+There are 3 outliers as negative infinity that are removed from plot. It seems that samples are very different.
+
+Density plot
+
+```{r}
+counts_density <- apply(log2(cpm(genes_filtered[,2:11])),
+2, density)
+xlim <- 0; ylim <- 0
+for (i in 1:length(counts_density)) {
+xlim <- range(c(xlim, counts_density[[i]]$x));
+ylim <- range(c(ylim, counts_density[[i]]$y))
+}
+cols <- rainbow(length(counts_density))
+ltys <- rep(1, length(counts_density))
+plot(counts_density[[1]], xlim=xlim, ylim=ylim, type="n",
+ylab="Smoothing density of log2-CPM",
+main="Raw Data Density Plot", cex.lab = 0.85)
+for (i in 1:length(counts_density))
+lines(counts_density[[i]], col=cols[i], lty=ltys[i])
+legend("topright", colnames(genes_expression[2:11]),
+col=cols, lty=ltys, cex=0.75,
+border ="blue", text.col = "black",
+merge = TRUE, bg = "gray90")
+```
+It seems that data follows a bimodal distribution pattern.
+
+MA plot 
+
+```{r}
+plotMA(log2(genes_filtered[,c(2:6,7:11)]), ylab="M - ratio log expression",
+main="MetS vs Control")
+```
+
+Scatter plot also does not show clustering around mean; there might be many outliers. 
+
+# 4. Mapping
+
+To perform mapping, ensembl_gene_id is selected
+
+```{r}
+ensembl <- useMart("ensembl")
+ensembl = useDataset("hsapiens_gene_ensembl",mart=ensembl)
+gene_mapped <- getBM(attributes = c("ensembl_gene_id","hgnc_symbol"),
+filters = c("ensembl_gene_id"),
+values = genes_filtered$ensembl_id,
+mart = ensembl)
+```
+
+
+```{r}
+length(which(rownames(cpms) %in%
+gene_mapped$ensembl_gene_id))
+```
+Total number of genes with measurements
+```{r}
+nrow(cpms)
+```
+Number of genes that could not be mapped
+```{r}
+nrow(cpms) - length(which(rownames(cpms) %in%
+gene_mapped$ensembl_gene_id)) 
+```
+Merging raw data and mapped genes; presenting data in one metobolic syndrome patient and one healthy person
+```{r}
+cpms_annot <- merge(gene_mapped,cpms,
+by.x = 1, by.y = 0, all.y=TRUE)
+kable(cpms_annot[1:6,c(1,2,3,8)],format = "html")
+```
+* Another method to check ensembl ID missing genes.
+```{r}
+length(ensembl_id_missing_gene <- cpms_annot$ensembl_gene_id[
+which(is.na(cpms_annot$hgnc_symbol))])
+```
+Presenting the first 10 ensembl IDs that do not match with HUGO
+```{r}
+kable(cpms_annot[which(is.na(cpms_annot$hgnc_symbol)),1:3], format = "pipe")[3:12]
+```
+
+Old mapping
+
+```{r}
+old_mapping <- merge(genes_expression,data.frame(ensembl_id_missing_gene), by.x = 1, by.y = 1)
+kable(old_mapping[1:10,], type="pipe")
+```
+
+
+# 5. Normalization
+
+Checking potential duplication
+
+```{r}
+summary(duplicated(gene_mapped$ensembl_gene_id))
+```
+
+Removing duplication, and creating appropriate file to perform normalization analysis
+
+```{r}
+gene_mapped_unique <- unique(gene_mapped$ensembl_gene_id)
+gene_mapped_unique <- data.frame(gene_mapped_unique)
+rownames(gene_mapped_unique) <- gene_mapped_unique$gene_mapped_unique
+gene_mapped_unique_counts = genes_expression[which(rownames(gene_mapped_unique)%in% genes_expression$ensembl_id),]
+```
+MA Plot
+
+```{r}
+plotMA(log2(gene_mapped_unique_counts[,c(2:6,7:11)]), ylab="M - ratio log expression",main="MetS vs Control")
+```
+
+Trimmed Mean of M-values (TMM)
+
+```{r}
+filtered_data_matrix <- as.matrix(gene_mapped_unique_counts[,2:11])
+rownames(filtered_data_matrix) <- gene_mapped_unique_counts$ensembl_id
+d = DGEList(counts=filtered_data_matrix, group = dataSamples$Status)
+```
+
+Normalization factors
+
+```{r}
+d = calcNormFactors(d)
+kable(d$samples[,], format = "html") %>% row_spec(c(1,8,9,10), background = "yellow")
+```
+The normalization factor in the highlighted samples is less than 1. It means that small number of genes are expressed more in these samples; therefore, genes with less expression have higher relative value. 
+
+```{r}
+normalized_counts <- cpm(d)
+```
+```{r}
+plotMDS(d, labels=lapply(rownames(dataSamples), FUN=function(x){unlist(strsplit(x,split = "\\_"))[c(1)]}), col = c("darkgreen","blue")[factor(dataSamples$Status)], main="MDS Plot")
+```
+Samples are not cluster with each other, there are unpaired samples that show different expression. It seems that N3, M1, M2, M3 and M6 samples could be less different. 
+
+```{r}
+model_design <- model.matrix(~dataSamples$Status)
+```
+```{r}
+d <- estimateDisp(d, model_design)
+```
+```{r}
+plotBCV(d,col.tagwise = "black",col.common = "red",col.trend = "blue", main="Biological Coeffient of Variation")
+```
+MDS plot is weierd and I could not explain the reason. 
+Maybe that might be due to the study design [@li2021differentially], that to my understanding is a single cell analysis to detect variation of expression between cases and controls.
+
+Normalized Data Boxplot
+
+```{r warning=FALSE}
+data2plotNorm <- log2(normalized_counts)
+colnames(data2plotNorm) <- lapply(colnames(d)[1:10],
+                              FUN=function(x) {unlist(strsplit(x,
+                              split="\\_"))[c(1)]})
+boxplot(data2plotNorm, xlab = "Samples", ylab = "log2 CPM",
+las = 2, cex = 0.5, cex.lab = 0.5,
+cex.axis = 0.5, main = "Normalized Data - Boxplot")
+abline(h = median(apply(data2plotNorm, 2, median)),
+col = "darkgreen", lwd = 1.2, lty = "dashed")
+```
+
+I used normalized data to check boxplot, but I could not explain what that weird boxplot means.
+
+Normalized Data Density plot
+
+```{r}
+norm_counts_density <- apply(log2(normalized_counts[,]),
+2, density)
+xlim <- 0; ylim <- 0
+for (i in 1:length(norm_counts_density)) {
+xlim <- range(c(xlim, norm_counts_density[[i]]$x));
+ylim <- range(c(ylim, norm_counts_density[[i]]$y))
+}
+cols <- rainbow(length(norm_counts_density))
+ltys <- rep(1, length(norm_counts_density))
+plot(norm_counts_density[[1]], xlim=xlim, ylim=ylim, type="n",
+ylab="Smoothing density of log2-CPM",
+main="Normalized Data Density Plot", cex.lab = 0.85)
+for (i in 1:length(norm_counts_density))
+lines(norm_counts_density[[i]], col=cols[i], lty=ltys[i])
+legend("topright", colnames(genes_expression[2:11]),
+col=cols, lty=ltys, cex=0.75,
+border ="blue", text.col = "black",
+merge = TRUE, bg = "gray90")
+```
+Density plot of normalized does not add any information and I could not explain why.
+
+**What are the control and test conditions of the dataset?**
+In this study, test condition includes 5 patients with metabolic syndrom, and controls include 5 healthy individuals.
+
+**Why is the dataset of interest to you?**
+Metabolic syndrome is defined as a set of metabolic disturbances including but not limited to, obesity, hypertension, insulin resistance that eventually results in cardiovascular disorders, liver disease, and type 2 diabetes. Many people worldwide are suffering from this condition [@li2021differentially].
+
+**Were there expression values that were not unique for specific genes? How did you handle these?**
+In this dataset, there is not any duplicate of genes. I used duplicated function to detect any duplication.
+
+**Were there expression values that could not be mapped to current HUGO symbols?**
+Yes. 24 genes are not mapped to the current HUGO symbols.
+
+**How many outliers were removed?**
+25,488 entries were removed with less than 1 read per million in the sample.
+
+**How did you handle replicates?**
+Except for those with low counts, replicates in the control and test conditions have been used in the data.
+
+**What is the final coverage of your dataset?**
+21.31%; that includes 6,903 genes, 10 samples (5 metabolic syndroms, and 5 healthy individuals)
+
+All codes in this work are adapted from lectures instructed by Dr. Ruth Isserlin [@isserlin23]
+
+
+## References
+
+
+
+
+
+
+
+
+
+
+
+
+
