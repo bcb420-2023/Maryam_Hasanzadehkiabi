@@ -47,8 +47,8 @@ if (!requireNamespace("rmarkdown", quietly = TRUE))
     +     install.packages("rmarkdown")
 if (!requireNamespace("knitr", quietly = TRUE))
     +     install.packages("knitr")
-if (!requireNamespace("pandoc", quietly = TRUE))
-    +     install.packages("pandoc")
+#if (!requireNamespace("pandoc", quietly = TRUE))
+#    +     install.packages("pandoc")
 if (!requireNamespace("devtools", quietly = TRUE))
     +     install.packages("devtools")
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -109,22 +109,23 @@ sql <- paste("SELECT DISTINCT gse.title,gse.gse, gpl.title,",
 
 Selecting series with counts data
 
-```{r, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE}
-if(!file.exists('GEOmetadb.sqlite')) getSQLiteFile()
-con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
-rs <- dbGetQuery(con,sql)
-counts_files <- rs$supplementary_file[grep(rs$supplementary_file,
-                              pattern = "count|cnt",ignore.case = TRUE)]
-
-series_of_interest <- rs$gse[grep(rs$supplementary_file,
-                              pattern = "count|cnt",ignore.case = TRUE)]
-
-shortened_filenames <- unlist(lapply(counts_files,
-             FUN = function(x){x <- unlist(strsplit(x,";")) ;
-              x <- x[grep(x,pattern= "count|cnt",ignore.case = TRUE)];
-               tail(unlist(strsplit(x,"/")),n=1)}))
-shortened_filenames[1:10]
-```
+#```{r}
+#, echo=FALSE, eval=FALSE, message=FALSE, warning=FALSE
+#if(!file.exists('GEOmetadb.sqlite')) getSQLiteFile()
+#con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
+#rs <- dbGetQuery(con,sql)
+#counts_files <- rs$supplementary_file[grep(rs$supplementary_file,
+#                              pattern = "count|cnt",ignore.case = TRUE)]
+#
+#series_of_interest <- rs$gse[grep(rs$supplementary_file,
+#                              pattern = "count|cnt",ignore.case = TRUE)]
+#
+#shortened_filenames <- unlist(lapply(counts_files,
+#             FUN = function(x){x <- unlist(strsplit(x,";")) ;
+#              x <- x[grep(x,pattern= "count|cnt",ignore.case = TRUE)];
+#               tail(unlist(strsplit(x,"/")),n=1)}))
+#shortened_filenames[1:10]
+#```
 
 The output of the interested series resulted in only one series that holds the selection criteria. Therefore, in the following steps, GSE166474 [@li2021differentially] is being checked to find whether it contains sufficient samples to continue further analyses.
 
@@ -431,9 +432,9 @@ model_design <- model.matrix(~dataSamples$Status)
 ```{r}
 d <- estimateDisp(d, model_design)
 ```
-```{r}
-plotBCV(d,col.tagwise = "black",col.common = "red",col.trend = "blue", main="Biological Coeffient of Variation")
-```
+#```{r}
+#plotBCV(d,col.tagwise = "black",col.common = "red",col.trend = "blue", main="Biological Coeffient of Variation")
+#```
 MDS plot is weierd and I could not explain the reason. 
 Maybe that might be due to the study design [@li2021differentially], that to my understanding is a single cell analysis to detect variation of expression between cases and controls.
 
