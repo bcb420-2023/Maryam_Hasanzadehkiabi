@@ -6,6 +6,6 @@ Link to Maryam Hasanzadehkiabi's wiki - https://github.com/bcb420-2023/Maryam_Ha
 
 Assignments:
 
-A1	HTML (final): https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_final.html
+A1	HTML (final): https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%201/Assignment_1_final.html
 
 A1 .RMD (final) : https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_final.Rmd
