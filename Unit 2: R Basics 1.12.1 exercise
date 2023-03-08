@@ -1,0 +1,15 @@
+---
+title: "Unit 2: R Basics 1.12.1 exercise"
+output: html_notebook
+---
+```{r}
+library()
+search()
+?vignette
+?install.packages
+install.packages("seqinr",repos="https://cran.rstudio.com/")
+library(help="seqinr")
+library(seqinr)
+ls("package:seqinr")
+```
+

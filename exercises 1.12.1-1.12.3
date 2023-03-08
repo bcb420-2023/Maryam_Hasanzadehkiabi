@@ -1,0 +1,112 @@
+---
+title: "Unit 2 R Basics: 1.12.1-1.12.3 exercises and self-evaluation"
+output: html_notebook
+---
+```{r}
+library()
+search()
+#?vignette
+#?install.packages
+install.packages("seqinr", repos = "https://cran.rstudio.com/")
+library(help="seqinr")
+library(seqinr)
+ls("package:seqinr")
+?seqinr::a
+seqinr::a("Tyr")
+seqinr::words(3, c("A", "B", "C", "U"))
+```
+
+```{r}
+?data
+```
+# this function provides the help documentation on Data sets
+
+```{r}
+data(package="seqinr")
+```
+# one example of data available in seqinr package is AnoukResult
+
+```{r}
+data(aaindex, package="seqinr")
+```
+# its a ordered list 
+
+```{r}
+?aaindex
+```
+# this is help documentation for aaindex {seqinr} and the title is "List of 544 physiochemical and biological properties for the 20 amino-acids"
+
+
+```{r}
+aaindex$FASG890101
+```
+
+```{r}
+aaindex$PONJ960101
+```
+
+```{r}
+plot(aaindex$FASG890101$I, aaindex$PONJ960101$I, xlab = "hydrophobicity", ylab = "volume", type = "n")
+text(aaindex$FASG890101$I, aaindex$PONJ960101$I, labels = a(names(aaindex$FASG890101$I)))
+```
+
+```{r}
+seqinr::choosebank("swissprot")
+mySeq <- seqinr::query("mySeq", "N=MBP1_YEAST")
+mbp1 <- seqinr::getSequence(mySeq)
+seqinr::closebank()
+x <- seqinr::AAstat(mbp1[[1]])
+barplot(sort(x$Compo), cex.names = 0.6)
+```
+
+
+```{r}
+library(seqinr)
+choosebank("swissprot")
+mySeq <- query("mySeq", "N=MBP1_YEAST")
+mbp1 <- getSequence(mySeq)
+closebank()
+x <- AAstat(mbp1[[1]])
+barplot(sort(x$Compo), cex.names = 0.6)
+```
+
+
+```{r}
+if (! requireNamespace("seqinr", quietly=TRUE)) {
+  install.packages("seqinr")
+}
+```
+
+
+```{r}
+library(help="seqinr")
+```
+
+```{r}
+browseVignettes("seqinr")
+```
+
+
+```{r}
+data(package = "seqinr")
+```
+
+
+```{r}
+if (! requireNamespace("sos", quietly=TRUE)) {
+    install.packages("sos")
+}
+library(help = sos)       # basic information
+browseVignettes("sos")    # available vignettes
+ 
+sos::findFn("moving average")
+```
+
+```{r}
+#question 1 - What is the purpose of this code?
+if (! requireNamespace("seqinr", quietly = TRUE)) {
+    install.packages("seqinr")
+}
+```
+
+# this makes sure that the package is installed only when you type FALSE, this way it saves time and runs faster.
