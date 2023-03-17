@@ -1,0 +1,422 @@
+---
+title: "BCB420 Assignment 1 for A2"
+author: "Maryam Hasanzadehkiabi"
+output: html_notebook
+---
+#docker run --rm -it -v "$(pwd)":/home/rstudio/projects --user rstudio risserlin/bcb420-base-image /usr/local/bin/R -e "rmarkdown::render('/home/rstudio/projects/name_of_rmd.Rmd',output_file='/home/rstudio/projects/name_of_html.html')" > processing_output_filename
+
+#~/projects/Documents/BCB420/Maryam_Hasanzadehkiabi/BCB420A1forA2notebook.Rmd
+
+# docker run --rm -it -v "$(pwd)":/home/rstudio/projects/Documents/BCB420/Maryam_Hasanzadehkiabi risserlin/bcb420-base-image /usr/local/bin/R -e "rmarkdown::render('/projects/Documents/BCB420/Maryam_Hasanzadehkiabi/BCB420A1forA2notebook.Rmd',output_file='/home/rstudio/projects/Documents/BCB420/Maryam_Hasanzadehkiabi/BCB420A1forA2notebook.html')" > processing_output_filename
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE) 
+```
+
+# 1. Dataset selection
+
+## Insert and running required packages
+
+[@xie2018r]
+[@allaire2023rmarkdown]
+[@xie2020r]
+[@Zhu2021]
+[@Müller2023]
+[@Wickham2022]
+[@Davis2007]
+[@Morgan2022]
+[@zhu2008geometadb]
+[@durinck2009mapping]
+[@durinck2005biomart]
+[@drost2017biomartr]
+[@loraine2015analysis]
+[@robinson2010edger]
+[@Wickham2022dev]
+[@Dervieux2022]
+[@Xie2023kni]
+[@Xie2015kni]
+[@Stodden2014]
+
+```{r}
+if (!requireNamespace("rmarkdown", quietly = TRUE))
+    +     install.packages("rmarkdown")
+if (!requireNamespace("knitr", quietly = TRUE))
+    +     install.packages("knitr")
+if (!requireNamespace("pandoc", quietly = TRUE))
+    +     install.packages("pandoc")
+if (!requireNamespace("devtools", quietly = TRUE))
+    +     install.packages("devtools")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    +     install.packages("BiocManager")
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+if (!requireNamespace("biomaRt", quietly = TRUE))
+    BiocManager::install("biomaRt")
+if (!requireNamespace("GEOmetadb", quietly = TRUE))
+    BiocManager::install("GEOmetadb")
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    +     install.packages("GEOquery")
+if (!requireNamespace("DBI", quietly = TRUE))
+    +     install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE))
+    +     install.packages("RSQLite")
+if(!requireNamespace("kableExtra", quietly=TRUE))
+    install.packages("kableExtra")
+```
+
+```{r}
+library(devtools)
+library(rmarkdown)
+library(knitr)
+library(pandoc)
+library(BiocManager)
+library(GEOmetadb)
+library(GEOquery)
+library(DBI)
+library(RSQLite)
+library(edgeR)
+library(biomaRt)
+library(kableExtra)
+```
+
+## Dataset Selection Criteria
+
+1) RNASeq data 
+2) Within the last 5 years
+3) Limited to human
+4) Number of samples more than 6
+5) Related to Colorectal Cancer
+
+```{r message=FALSE, warning=FALSE}
+sql <- paste("SELECT DISTINCT gse.title,gse.gse, gpl.title,",
+             " gse.submission_date,",
+             " gse.supplementary_file", 
+             "FROM",
+             "  gse JOIN gse_gpl ON gse_gpl.gse=gse.gse",
+             "  JOIN gpl ON gse_gpl.gpl=gpl.gpl",
+             "WHERE",
+             "  gse.submission_date > '2013-01-01' AND", 
+             "  gse.title LIKE '%colon cancer%' AND", 
+             "  gpl.organism LIKE '%Homo sapiens%' AND",
+             "  gpl.technology LIKE '%high-throughput sequencing%' ",
+             "  ORDER BY gse.submission_date DESC",sep=" ")
+```
+
+Selecting series with counts data
+
+```{r}
+if(!file.exists('GEOmetadb.sqlite')) getSQLiteFile()
+con <- dbConnect(SQLite(),'GEOmetadb.sqlite')
+rs <- dbGetQuery(con,sql)
+counts_files <- rs$supplementary_file[grep(rs$supplementary_file,
+                              pattern = "count|cnt",ignore.case = TRUE)]
+
+series_of_interest <- rs$gse[grep(rs$supplementary_file,
+                              pattern = "count|cnt",ignore.case = TRUE)]
+
+shortened_filenames <- unlist(lapply(counts_files,
+             FUN = function(x){x <- unlist(strsplit(x,";")) ;
+              x <- x[grep(x,pattern= "count|cnt",ignore.case = TRUE)];
+               tail(unlist(strsplit(x,"/")),n=1)}))
+shortened_filenames[1:10]
+```
+
+The first 10 outputs of the interested series show studies focused on colorectal genomics, and hold the selection criteria. After quick reviewing, I chose GSE98922 [@schmidt2018targeting].
+
+## Details of the Selected Series
+
+Number of entities
+
+```{r}
+gse <- getGEO("GSE98922",GSEMatrix=FALSE)
+```
+
+Data owner contact information
+
+```{r}
+kable(data.frame(head(Meta(gse))), format = "pipe")
+```
+
+Name and number of the samples
+
+```{r}
+names(GSMList(gse))
+```
+Series includes 9 samples.
+
+More information about the series
+
+```{r}
+show(getGEO("GSE98922",GSEMatrix=TRUE))
+```
+
+Samples classification
+
+```{r}
+data.frame(getGEO("GSE98922",GSEMatrix=TRUE)[[1]])[,]
+```
+There are 3 groups in the study, including 3 vehicle_treated, 3 AZD_treated, and 3 DBZ_treated; total 9 samples. 
+
+## Platform details
+
+```{r}
+current_gpl <- names(GPLList(gse))[1]
+current_gpl_info <- Meta(getGEO(current_gpl))
+```
+
+**Platform accession number:**
+```{r}
+current_gpl_info$geo_accession
+```
+**Platform title:**
+```{r}
+current_gpl_info$title
+```
+**Submission date:**
+```{r}
+current_gpl_info$submission_date
+```
+**Last update date:**
+```{r}
+current_gpl_info$last_update_date
+```
+**Organisms:**
+```{r}
+current_gpl_info$organism
+```
+**Technology:**
+```{r}
+current_gpl_info$technology
+```
+**Number of GEO datasets that use this technology:*
+```{r}
+length(current_gpl_info$series_id)
+```
+**Number of GEO samples that use this technology:**
+```{r}
+length(current_gpl_info$sample_id)
+```
+
+# 2. Data expression
+
+Supplementary files
+
+```{r}
+supp_files = getGEOSuppFiles('GSE98922')
+file_names = rownames(supp_files)
+print(file_names)
+```
+There are two supplementary files provided for this dataset, one includes counts and the other one contains rlog_transformed [@schmidt2018targeting]. Researchers studied NOTCH, MAPK, and WNT pathways signaling effect on a total 328 adenocarcinoma. Tumor cells located at the tumor edge with MAPK and WNT high activity showed epithelial-mesenchymal transition (EMT) phenotype, while tumor cells located at the tumor center showed more epithelial phenotype [@schmidt2018targeting]. Counts file is being used for further analysis.       
+
+```{r}
+genes_expression = read.delim(file_names[1],header=TRUE,
+          check.names = FALSE)
+```
+
+In the following section, number of the genes and name of the variables included in the dataset are presented; since the first column includes gene names without column name, "hgnc_symbol" is assigned to the first column name.
+
+```{r}
+dim(genes_expression)
+colnames(genes_expression)[1] <- "hgnc_symbol"
+colnames(genes_expression)
+```
+
+Samples category
+
+Considering the treatment agent, there are 3 groups including vehicle-treated tumors (controls), MEK inhibitor-treated (selumetinib (AZD)), and γ-secretase inhibitor-treated (dibenzazepine (DBZ)); each group contains 3 replicates.
+
+```{r}
+dataSamples <- data.frame(lapply(colnames(genes_expression)[2:10],
+FUN=function(x){substr(x, 1, nchar(x)-1)}))
+colnames(dataSamples) <- colnames(genes_expression)[2:10]
+dataSamples <- data.frame(t(dataSamples))
+dataSamples[dataSamples == "control"] <- "Vehicle"
+dataSamples[dataSamples == "TreatmentA"] <- "AZD"
+dataSamples[dataSamples == "TreatmentD"] <- "DBZ"
+colnames(dataSamples) <- "Agent"
+```
+
+# 3. Genes cleaning and filtering
+
+## Duplication
+Checking potential duplication. If the logical output returns any "TRUE" value, there does exist duplication. Otherwise the set contains unique genes.
+
+```{r}
+summary(duplicated(genes_expression$hgnc_symbol))
+summary(is.na(genes_expression$hgnc_symbol))
+```
+Since there is no "TRUE" value in the output, dataset dose not include any duplicate or missing value genes.
+
+## Outliers
+Noise filtering is performed to keep only genes with at least 1 read per million in 3 samples (i.e. smallest group of replicates).  
+
+```{r}
+cpms = cpm(genes_expression[,2:10])
+rownames(cpms) <- genes_expression$hgnc_symbol
+keep = rowSums(cpms > 2) >=3
+genes_filtered = genes_expression[keep,]
+```
+
+## Data distribution before normalization
+
+Boxplot
+
+```{r}
+data2plot <- log2(cpm(genes_filtered[,2:10]))
+colnames(data2plot) <- colnames(genes_filtered)[2:10]
+boxplot(data2plot, xlab = "Samples", ylab = "log2 CPM",
+las = 2, cex = 0.5, cex.lab = 0.5,
+cex.axis = 0.5, main = "Raw Data - Boxplot", col=rainbow(10))
+abline(h = median(apply(data2plot, 2, median)),
+col = "yellow", lwd = 1.2, lty = "dashed")
+```
+
+Outliers with negative infinity are rnot drawn in plot. 
+
+Density plot
+
+```{r}
+counts_density <- apply(log2(cpm(genes_filtered[,2:10])),
+2, density)
+xlim <- 0; ylim <- 0
+for (i in 1:length(counts_density)) {
+xlim <- range(c(xlim, counts_density[[i]]$x));
+ylim <- range(c(ylim, counts_density[[i]]$y))
+}
+cols <- rainbow(length(counts_density))
+ltys <- rep(1, length(counts_density))
+plot(counts_density[[1]], xlim=xlim, ylim=ylim, type="n",
+ylab="Smoothing density of log2-CPM",
+main="Raw Data Density Plot", cex.lab = 0.85)
+for (i in 1:length(counts_density))
+lines(counts_density[[i]], col=cols[i], lty=ltys[i])
+legend("topright", colnames(genes_expression[2:10]),
+col=cols, lty=ltys, cex=0.75,
+border ="blue", text.col = "black",
+merge = TRUE, bg = "gray90")
+```
+It seems that data follows a normal distribution pattern.
+
+MA plot 
+
+```{r}
+plotMA(log2(genes_filtered[,c(2:4,5:7,8:10)]), ylab="M - ratio log expression",
+main="MetS vs Control")
+```
+
+#Scatter plot also does not show clustering around mean; there might be many outliers. 
+
+# 4. Mapping
+
+To perform mapping, hgnc_symbol is selected
+
+```{r}
+ensembl <- useMart("ensembl")
+ensembl = useDataset("hsapiens_gene_ensembl",mart=ensembl)
+gene_mapped <- getBM(attributes = c("ensembl_gene_id","hgnc_symbol"),
+filters = c("hgnc_symbol"),
+values = genes_filtered$hgnc_symbol,
+mart = ensembl)
+```
+
+
+```{r}
+length(which(rownames(cpms) %in%
+gene_mapped$hgnc_symbol))
+```
+Total number of genes with measurements
+```{r}
+nrow(cpms)
+```
+Number of genes that could not be mapped
+```{r}
+nrow(cpms) - length(which(rownames(cpms) %in%
+gene_mapped$hgnc_symbol)) 
+```
+Merging raw data and mapped genes; presenting data in one metobolic syndrome patient and one healthy person
+```{r}
+cpms_annot <- merge(gene_mapped,cpms,
+by.x = 2, by.y = 0, all.y=TRUE)
+kable(cpms_annot[1:6,c(1,2,3,8)],format = "html")
+```
+* Another method to check ensembl ID missing genes.
+```{r}
+length(ensembl_id_missing_gene <- cpms_annot$ensembl_gene_id[
+which(is.na(cpms_annot$ensembl_gene_id))])
+```
+Presenting the first 10 ensembl IDs that do not match with HUGO
+```{r}
+kable(cpms_annot[which(is.na(cpms_annot$ensembl_gene_id)),1:3], format = "pipe")[1:12]
+```
+
+Old mapping
+
+#```{r}
+old_mapping <- merge(genes_expression,data.frame(ensembl_id_missing_gene), by.x = 2, by.y = 1)
+kable(old_mapping[1:10,], type="pipe")
+#```
+
+
+# 5. Normalization
+
+Checking potential duplication
+
+```{r}
+summary(duplicated(gene_mapped$ensembl_gene_id))
+summary(duplicated(gene_mapped$hgnc_symbol))
+
+```
+
+Removing duplication, and creating appropriate file to perform normalization analysis
+
+```{r}
+gene_mapped_unique <- unique(gene_mapped$hgnc_symbol)
+gene_mapped_unique <- data.frame(gene_mapped_unique)
+rownames(gene_mapped_unique) <- gene_mapped_unique$gene_mapped_unique
+gene_mapped_unique_counts = genes_expression[which(rownames(gene_mapped_unique)%in% genes_expression$hgnc_symbol),]
+```
+MA Plot
+
+```{r}
+plotMA(log2(gene_mapped_unique_counts[,c(2:4,5:7,8:10)]), ylab="M - ratio log expression",main="MetS vs Control")
+```
+
+Trimmed Mean of M-values (TMM)
+
+```{r}
+filtered_data_matrix <- as.matrix(gene_mapped_unique_counts[,2:10])
+rownames(filtered_data_matrix) <- gene_mapped_unique_counts$hgnc_symbol
+d = DGEList(counts=filtered_data_matrix, group = dataSamples$Agent)
+```
+
+Normalization factors
+
+```{r}
+d = calcNormFactors(d)
+d$samples[1:9,]
+#kable(d$samples[,], format = "html") %>% row_spec(c(1,8,9,10), background = "yellow")
+```
+The normalization factor in the highlighted samples is less than 1. It means that small number of genes are expressed more in these samples; therefore, genes with less expression have higher relative value. 
+
+```{r}
+normalized_counts <- cpm(d)
+```
+```{r}
+plotMDS(d, labels=rownames(dataSamples), col = c("darkgreen","blue")[factor(dataSamples$Agent)], main="MDS Plot")
+```
+Samples are not cluster with each other, there are unpaired samples that show different expression. It seems that N3, M1, M2, M3 and M6 samples could be less different. 
+
+```{r}
+model_design <- model.matrix(~dataSamples$Agent)
+```
+```{r}
+d <- estimateDisp(d, model_design)
+```
+```{r}
+plotBCV(d,col.tagwise = "black",col.common = "red",col.trend = "blue", main="Biological Coeffient of Variation")
+```
+
+
+
+## References
+

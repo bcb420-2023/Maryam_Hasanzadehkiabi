@@ -8,7 +8,31 @@ This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute
 Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
 
 ```{r}
-plot(cars)
+#lab 9 bst.py
+
+#def height 
+#is self.is_empty():
+#  return 0
+#ele:
+#  return max(self._left.height() + self._right.height())
+
+#def items in range:
+ # if self.is_empty():
+#    return []
+ # elif self._root > end:
+#    return self._left.items_in_range(start, end)
+# elif self._root < start:
+#   return self._right.items_in_range(start, end)
+# else:
+   #start <= self._root <= end
+#   return (self._left.items_in_range(start, self._root) + [self._root] + #self._right.items_in_range(self._root, end) )
+# 
+ 
+ # example:
+ # root = 15
+ # start = 10, end = 20
+ # self._left.items_in_range(10, 15)
+ #
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
