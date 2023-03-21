@@ -10,8 +10,8 @@ output:
     toc: yes
     toc_depth: '2'
 subtitle: Dataset Selection and Initial Processing
-#bibliography: assignment_1.bib
-#csl: american-medical-association.csl
+bibliography: assignment_1.bib
+csl: american-medical-association.csl
 ---
 
 ```{r setup, include=FALSE}
@@ -42,13 +42,11 @@ knitr::opts_chunk$set(echo = TRUE)
 [@Xie2015kni]
 [@Stodden2014]
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 if (!requireNamespace("rmarkdown", quietly = TRUE))
     +     install.packages("rmarkdown")
 if (!requireNamespace("knitr", quietly = TRUE))
     +     install.packages("knitr")
-if (!requireNamespace("pandoc", quietly = TRUE))
-    +     install.packages("pandoc")
 if (!requireNamespace("devtools", quietly = TRUE))
     +     install.packages("devtools")
 if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -69,11 +67,10 @@ if(!requireNamespace("kableExtra", quietly=TRUE))
     install.packages("kableExtra")
 ```
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(devtools)
 library(rmarkdown)
 library(knitr)
-library(pandoc)
 library(BiocManager)
 library(GEOmetadb)
 library(GEOquery)
@@ -211,7 +208,7 @@ supp_files = getGEOSuppFiles('GSE98922')
 file_names = rownames(supp_files)
 print(file_names)
 ```
-There are two supplementary files provided for this dataset, one includes counts and the other one contains rlog_transformed [@schmidt2018targeting]. Researchers studied NOTCH, MAPK, and WNT pathways signaling effect on a total 328 adenocarcinoma. Tumor cells located at the tumor edge with MAPK and WNT high activity showed epithelial-mesenchymal transition (EMT) phenotype, while tumor cells located at the tumor center showed more epithelial phenotype [@schmidt2018targeting]. Counts file is being used for further analysis.       
+There are two supplementary files provided for this dataset, one includes counts data and the other one contains rlog_transformed data[@schmidt2018targeting]. Researchers studied NOTCH, MAPK, and WNT pathways signaling effect on a total 328 adenocarcinoma. Tumor cells located at the tumor edge with MAPK and WNT high activity showed epithelial-mesenchymal transition (EMT) phenotype, while tumor cells located at the tumor center showed more epithelial phenotype [@schmidt2018targeting]. Counts file is being used for further analysis.       
 
 ```{r}
 genes_expression = read.delim(file_names[1],header=TRUE,
@@ -239,6 +236,15 @@ dataSamples[dataSamples == "control"] <- "Vehicle"
 dataSamples[dataSamples == "TreatmentA"] <- "AZD"
 dataSamples[dataSamples == "TreatmentD"] <- "DBZ"
 colnames(dataSamples) <- "Agent"
+
+dataSamples_control_versus_TReatmentA <- data.frame(lapply(colnames(genes_expression)[2:7],
+FUN=function(x){substr(x, 1, nchar(x)-1)}))
+colnames(dataSamples_control_versus_TReatmentA) <- colnames(genes_expression)[2:7]
+dataSamples_control_versus_TReatmentA <- data.frame(t(dataSamples_control_versus_TReatmentA))
+dataSamples_control_versus_TReatmentA[dataSamples_control_versus_TReatmentA == "control"] <- "Vehicle"
+dataSamples_control_versus_TReatmentA[dataSamples_control_versus_TReatmentA == "TreatmentA"] <- "AZD"
+colnames(dataSamples_control_versus_TReatmentA) <- "Agent"
+
 ```
 
 # 3. Genes cleaning and filtering
@@ -271,12 +277,12 @@ data2plot <- log2(cpm(genes_filtered[,2:10]))
 colnames(data2plot) <- colnames(genes_filtered)[2:10]
 boxplot(data2plot, xlab = "Samples", ylab = "log2 CPM",
 las = 2, cex = 0.5, cex.lab = 0.5,
-cex.axis = 0.5, main = "Raw Data - Boxplot", col=rainbow(10))
+cex.axis = 0.5, main = "Count Data - Boxplot", col=rainbow(10))
 abline(h = median(apply(data2plot, 2, median)),
 col = "yellow", lwd = 1.2, lty = "dashed")
 ```
 
-Outliers with negative infinity are rnot drawn in plot. 
+Outliers with negative infinity are not drawn in plot. 
 
 Density plot
 
@@ -292,7 +298,7 @@ cols <- rainbow(length(counts_density))
 ltys <- rep(1, length(counts_density))
 plot(counts_density[[1]], xlim=xlim, ylim=ylim, type="n",
 ylab="Smoothing density of log2-CPM",
-main="Raw Data Density Plot", cex.lab = 0.85)
+main="Count Data Density Plot", cex.lab = 0.85)
 for (i in 1:length(counts_density))
 lines(counts_density[[i]], col=cols[i], lty=ltys[i])
 legend("topright", colnames(genes_expression[2:10]),
@@ -306,7 +312,7 @@ MA plot
 
 ```{r}
 plotMA(log2(genes_filtered[,c(2:4,5:7,8:10)]), ylab="M - ratio log expression",
-main="MetS vs Control")
+main="Treatment vs Control")
 ```
 
 #Scatter plot also does not show clustering around mean; there might be many outliers. 
@@ -338,11 +344,11 @@ Number of genes that could not be mapped
 nrow(cpms) - length(which(rownames(cpms) %in%
 gene_mapped$hgnc_symbol)) 
 ```
-Merging raw data and mapped genes; presenting data in one metobolic syndrome patient and one healthy person
+Merging raw data and mapped genes; presenting first 6 rows in all cases
 ```{r}
 cpms_annot <- merge(gene_mapped,cpms,
 by.x = 2, by.y = 0, all.y=TRUE)
-kable(cpms_annot[1:6,c(1,2,3,8)],format = "html")
+kable(cpms_annot[1:6,],format = "html")
 ```
 * Another method to check ensembl ID missing genes.
 ```{r}
@@ -351,7 +357,7 @@ which(is.na(cpms_annot$ensembl_gene_id))])
 ```
 Presenting the first 10 ensembl IDs that do not match with HUGO
 ```{r}
-kable(cpms_annot[which(is.na(cpms_annot$ensembl_gene_id)),1:3], format = "pipe")[1:12]
+kable(cpms_annot[which(is.na(cpms_annot$ensembl_gene_id)),], format = "pipe")[1:12]
 ```
 
 Old mapping
@@ -379,6 +385,12 @@ gene_mapped_unique <- unique(gene_mapped$hgnc_symbol)
 gene_mapped_unique <- data.frame(gene_mapped_unique)
 rownames(gene_mapped_unique) <- gene_mapped_unique$gene_mapped_unique
 gene_mapped_unique_counts = genes_expression[which(rownames(gene_mapped_unique)%in% genes_expression$hgnc_symbol),]
+
+gene_mapped_unique_Cont_TA <- unique(gene_mapped$hgnc_symbol)
+gene_mapped_unique_Cont_TA <- data.frame(gene_mapped_unique_Cont_TA)
+rownames(gene_mapped_unique_Cont_TA) <- gene_mapped_unique_Cont_TA$gene_mapped_unique_Cont_TA
+gene_mapped_unique_counts_Cont_TA = genes_expression[which(rownames(gene_mapped_unique_Cont_TA)%in% genes_expression$hgnc_symbol),]
+
 ```
 MA Plot
 
@@ -392,6 +404,9 @@ Trimmed Mean of M-values (TMM)
 filtered_data_matrix <- as.matrix(gene_mapped_unique_counts[,2:10])
 rownames(filtered_data_matrix) <- gene_mapped_unique_counts$hgnc_symbol
 d = DGEList(counts=filtered_data_matrix, group = dataSamples$Agent)
+filtered_data_matrix_con_TA <- as.matrix(gene_mapped_unique_counts[,2:7])
+rownames(filtered_data_matrix_con_TA) <- gene_mapped_unique_counts$hgnc_symbol
+d_control_versus_TreatmentA <- DGEList(counts=filtered_data_matrix_con_TA, group = dataSamples_control_versus_TReatmentA$Agent)
 ```
 
 Normalization factors
@@ -399,15 +414,21 @@ Normalization factors
 ```{r}
 d = calcNormFactors(d)
 d$samples[1:9,]
+d_control_versus_TreatmentA = calcNormFactors(d_control_versus_TreatmentA)
+d_control_versus_TreatmentA$samples[1:6,]
 #kable(d$samples[,], format = "html") %>% row_spec(c(1,8,9,10), background = "yellow")
 ```
 The normalization factor in the highlighted samples is less than 1. It means that small number of genes are expressed more in these samples; therefore, genes with less expression have higher relative value. 
 
 ```{r}
 normalized_counts <- cpm(d)
+normalized_counts_vehicle_TreatmentA <- cpm(d_control_versus_TreatmentA)
 ```
 ```{r}
 plotMDS(d, labels=rownames(dataSamples), col = c("darkgreen","blue")[factor(dataSamples$Agent)], main="MDS Plot")
+
+plotMDS(d_control_versus_TreatmentA, labels=rownames(dataSamples_control_versus_TReatmentA), col = c("darkgreen","blue")[factor(dataSamples_control_versus_TReatmentA$Agent)], main="MDS Plot")
+
 ```
 Samples are not cluster with each other, there are unpaired samples that show different expression. It seems that N3, M1, M2, M3 and M6 samples could be less different. 
 

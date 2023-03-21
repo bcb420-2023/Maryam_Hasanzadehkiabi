@@ -1,0 +1,226 @@
+---
+title: "BCB420 Assignment 2"
+author: "Maryam Hasanzadehkiabi"
+date: '2023-03-07'
+
+output: html_notebook
+    toc: yes
+    toc_depth: 2
+subtitle: "Differential Gene expression and Preliminary ORA
+bibliography: assignment_1.bib
+csl: american-medical-association.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# 1. Dataset 
+
+## Insert and running required packages
+
+[@xie2018r]
+[@allaire2023rmarkdown]
+[@xie2020r]
+[@Zhu2021]
+[@Müller2023]
+[@Wickham2022]
+[@Davis2007]
+[@Morgan2022]
+[@zhu2008geometadb]
+[@durinck2009mapping]
+[@durinck2005biomart]
+[@drost2017biomartr]
+[@loraine2015analysis]
+[@robinson2010edger]
+[@Wickham2022dev]
+[@Dervieux2022]
+[@Xie2023kni]
+[@Xie2015kni]
+[@Stodden2014]
+[@gu2022complex]
+[@gu2016complex]
+[@gu2014circlize]
+
+```{r, message=FALSE, warning=FALSE}
+if (!requireNamespace("rmarkdown", quietly = TRUE))
+    +     install.packages("rmarkdown")
+if (!requireNamespace("knitr", quietly = TRUE))
+    +     install.packages("knitr")
+if (!requireNamespace("devtools", quietly = TRUE))
+    +     install.packages("devtools")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    +     install.packages("BiocManager")
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+if (!requireNamespace("biomaRt", quietly = TRUE))
+    BiocManager::install("biomaRt")
+if (!requireNamespace("GEOmetadb", quietly = TRUE))
+    BiocManager::install("GEOmetadb")
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    +     install.packages("GEOquery")
+if (!requireNamespace("DBI", quietly = TRUE))
+    +     install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE))
+    +     install.packages("RSQLite")
+if(!requireNamespace("kableExtra", quietly=TRUE))
+    install.packages("kableExtra")
+if(!requireNamespace("ComplexHeatmap", quietly=TRUE))
+    install.packages("ComplexHeatmap")
+if(!requireNamespace("circlize", quietly=TRUE))
+    install.packages("circlize")
+if(!requireNamespace("functional", quietly=TRUE))
+    install.packages("functional")
+
+```
+
+```{r message=FALSE, warning=FALSE}
+library(devtools)
+library(rmarkdown)
+library(knitr)
+library(BiocManager)
+library(GEOmetadb)
+library(GEOquery)
+library(DBI)
+library(RSQLite)
+library(edgeR)
+library(biomaRt)
+library(kableExtra)
+library(ComplexHeatmap)
+library(circlize)
+library(functional)
+```
+
+... using the normailzed counts file created in the assignment 1 as:
+
+```{r}
+normalized_count_annot_Cont_TA <- merge(gene_mapped,
+normalized_counts_vehicle_TreatmentA, by.x = 2, by.y = 0, all.y = TRUE) 
+
+summary(duplicated(normalized_count_annot_Cont_TA$ensembl_gene_id)) #checking duplicated gene_id
+normalized_count_annot_Cont_TA_unique_gene_id <- subset(normalized_count_annot_Cont_TA, !duplicated(normalized_count_annot_Cont_TA$ensembl_gene_id)) #unique gene_id
+summary(is.na(normalized_count_annot_Cont_TA_unique_gene_id$ensembl_gene_id)) #there is one missing value
+normalized_count_annot_Cont_TA_unique_gene_id <- subset(normalized_count_annot_Cont_TA_unique_gene_id, !is.na(normalized_count_annot_Cont_TA_unique_gene_id$ensembl_gene_id)) #missing value removed
+
+summary(duplicated(normalized_count_annot_Cont_TA$hgnc_symbol)) #checking duplicated hgnc_symbol
+normalized_count_annot_Cont_TA_unique_hgnc_symbol <- subset(normalized_count_annot_Cont_TA, !duplicated(normalized_count_annot_Cont_TA$hgnc_symbol)) #unique hgnc_symbol
+summary(is.na(normalized_count_annot_Cont_TA_unique_hgnc_symbol$hgnc_symbol)) #there is no missing value
+
+```
+
+# 2. heatmap
+
+## 2.1. heatmap gene_id
+
+```{r}
+heatmap_matrix_gene_id <- normalized_count_annot_Cont_TA_unique_gene_id[,3:8] # creating a numerical matrix over unique gene_id
+rownames(heatmap_matrix_gene_id) <- normalized_count_annot_Cont_TA_unique_gene_id$ensembl_gene_id
+colnames(heatmap_matrix_gene_id) <- colnames(normalized_count_annot_Cont_TA_unique_gene_id[,3:8])
+
+```
+
+```{r}
+heatmap_matrix_hgnc_symbol <- normalized_count_annot_Cont_TA_unique_hgnc_symbol[,3:8] # creating a numerical matrix over unique hgnc_symbol
+rownames(heatmap_matrix_hgnc_symbol) <- normalized_count_annot_Cont_TA_unique_hgnc_symbol$hgnc_symbol
+colnames(heatmap_matrix_hgnc_symbol) <- colnames(normalized_count_annot_Cont_TA_unique_hgnc_symbol[,3:8])
+heatmap_matrix_hgnc_symbol <- heatmap_matrix_hgnc_symbol[apply(heatmap_matrix_hgnc_symbol, 1, Compose(is.finite, all)),]
+```
+
+# translating gene numbers to a color scale over gene_id data
+
+```{r}
+heatmap_matrix_gene_id <- t(scale(t(heatmap_matrix_gene_id)))
+if(min(heatmap_matrix_gene_id) == 0){
+heatmap_col = colorRamp2(c( 0, max(heatmap_matrix_gene_id)),
+c( "white", "red"))
+} else {
+heatmap_col = colorRamp2(c(min(heatmap_matrix_gene_id), 0,
+max(heatmap_matrix_gene_id)), c("blue", "white", "red"))
+}
+current_heatmap_gene_id <- Heatmap(as.matrix(heatmap_matrix_gene_id),
+show_row_dend = TRUE,show_column_dend = TRUE,
+col=heatmap_col,show_column_names = TRUE,
+show_row_names = FALSE,show_heatmap_legend = TRUE)
+current_heatmap_gene_id
+```
+## 2.2. heatmap hgnc_symbol
+
+# translating gene numbers to a color scale over hgnc_symbol data
+
+#```{r}
+#heatmap_matrix_hgnc_symbol <- t(scale(t(heatmap_matrix_hgnc_symbol)))
+#if(min(heatmap_matrix_hgnc_symbol) == 0){heatmap_col = colorRamp2(c( 0, #max(heatmap_matrix_hgnc_symbol)),
+#c( "white", "red"))} else 
+#  {heatmap_col = colorRamp2(c(min(heatmap_matrix_hgnc_symbol), 0,
+#max(heatmap_matrix_hgnc_symbol)), c("blue", "white", "red"))}
+#current_heatmap_hgnc_symbol <- Heatmap(as.matrix(heatmap_matrix_hgnc_symbol),
+#show_row_dend = TRUE,show_column_dend = TRUE,
+#col=heatmap_col,show_column_names = TRUE,
+#show_row_names = FALSE,show_heatmap_legend = TRUE)
+#current_heatmap_hgnc_symbol
+#```
+
+# 2.3. compairing the expression of genes
+
+## 2.3.1 based on gene_id uniqueness
+
+```{r}
+controls_samples_gene_id <- grep(colnames(normalized_count_annot_Cont_TA_unique_gene_id), pattern = "^c")
+TreatmentA_samples_gene_id <- grep(colnames(normalized_count_annot_Cont_TA_unique_gene_id), pattern = "^T")
+interested_genes <- which(normalized_count_annot_Cont_TA_unique_gene_id$hgnc_symbol== "PDGFRβ")
+```
+
+## 2.3.1 based on hgnc_symbol uniqueness
+
+# 3. creating data matrix
+
+## 3.1.1. gene_id data matrix
+
+```{r}
+gene_id_expressionMatrix <- as.matrix(normalized_count_annot_Cont_TA_unique_gene_id[,3:8])
+rownames(gene_id_expressionMatrix) <-
+normalized_count_annot_Cont_TA_unique_gene_id$ensembl_gene_id
+colnames(gene_id_expressionMatrix) <-
+colnames(normalized_count_annot_Cont_TA_unique_gene_id)[3:8]
+```
+
+## 3.1.2. creating a linear model
+
+```{r}
+gene_id_modelDesign <- model.matrix(~ dataSamples_control_versus_TReatmentA$Agent)
+gene_id_minimalSet <- ExpressionSet(assayData=gene_id_expressionMatrix)
+gene_id_fit_simpleModel <- lmFit(gene_id_minimalSet, gene_id_modelDesign)
+```
+
+## 3.1.3. fitting data to the model
+
+```{r}
+gene_id_minimalSet <- ExpressionSet(assayData=gene_id_expressionMatrix)
+gene_id_fit <- lmFit(gene_id_minimalSet, gene_id_modelDesign)
+```
+
+## 3.1.4. computing differential expression using emprical Bayes
+
+```{r}
+gene_id_fit2 <- eBayes(gene_id_fit,trend=TRUE)
+gene_id_topfit <- topTable(gene_id_fit2,
+coef=ncol(gene_id_modelDesign),
+adjust.method = "BH",
+number = nrow(gene_id_expressionMatrix))
+gene_id_output_hits <- merge(normalized_count_annot_Cont_TA_unique_gene_id[,1:2],
+gene_id_topfit,
+by.y=0,by.x=2,
+all.y=TRUE)
+gene_id_output_hits <- gene_id_output_hits[order(gene_id_output_hits$P.Value),]
+```
+
+## 3.1.5. number of genes with p-value less than 0.05
+
+```{r}
+numberOfGenes_pvalue_less_0.05 <- length(which(gene_id_output_hits$P.Value < 0.05))
+numberOfGenes_Adjusted_pvalue_less_0.05 <- length(which(gene_id_output_hits$adj.P.Val < 0.05))
+kable(gene_id_output_hits[1:10,],type="html",row.names = FALSE)
+```
+
+
+
