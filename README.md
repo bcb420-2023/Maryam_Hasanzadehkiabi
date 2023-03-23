@@ -13,7 +13,7 @@ A1 .RMD (final) : https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/mai
 
 # Assignment 2:
 
-A2 HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%202/A2_MaryamHasanzadehkiabi.nb.html
+A2 HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%202/A2_MaryamHasanzadehkiabi.html
 
 A2 .RMD Notebook: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%202/A2_MaryamHasanzadehkiabi.Rmd
 
