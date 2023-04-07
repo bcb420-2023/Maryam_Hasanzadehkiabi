@@ -10,6 +10,8 @@ A1	HTML (final): https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main
 
 A1 .RMD (final) : https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_final.Rmd
 
+A1 journal: 
+
 
 # Assignment 2:
 
@@ -19,3 +21,11 @@ A2 .RMD Notebook: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/mai
 
 A2 Journal: 
 
+
+# Assignment 3:
+
+A3 HTML:
+
+A3 .RMD notebook:
+
+A3 Journal: 
