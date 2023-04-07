@@ -1,0 +1,107 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+if (!requireNamespace("RCurl", quietly = TRUE))
+    +     install.packages("RCurl")
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+if (!require("RCy3", quietly = TRUE))
+    install.packages("RCy3")
+if (!require("ggplot2", quietly = TRUE))
+    install.packages("ggplot2")
+
+```
+
+```{r}
+library(RCurl)
+library(BiocManager)
+library(RCy3)
+library(ggplot2)
+```
+
+
+
+```{r}
+gmt_url = "http://download.baderlab.org/EM_Genesets/current_release/Human/symbol/"
+```
+```{r}
+filenames = getURL(gmt_url)
+tc = textConnection(filenames)
+contents = readLines(tc)
+close(tc)
+```
+
+```{r}
+rx = gregexpr("(?<=<a href=\")(.*.GOBP_AllPathways_no_GO_iea.*.)(.gmt)(?=\">)", contents,
+    perl = TRUE)
+gmt_file = unlist(regmatches(contents, rx))
+dest_gmt_file <- file.path("", gmt_file)
+download.file(paste(gmt_url, gmt_file, sep = ""), destfile = dest_gmt_file)
+```
+
+#```{r}
+#qlf_output_hits_withgn_ranked <- qlf_output_hits_withgn[,c(1,8)]
+#```
+
+```{r}
+#knitr::opts_chunk$set(
+    # This should allow Rmarkdown to locate the data
+#    root.dir = rprojroot::find_rstudio_root_file()
+#)
+#rmarkdown::render()
+#kinter:: opts_knit$set(root.dir = '/tmp')
+gsea_jar <- "C:/Users/Amir/Downloads/GSEA_4.3.2/GSEA_4.3.2/gsea-cli.bat"
+java_version <- 11
+#run_gsea <- $ "C:/Users/Amir/Downloads/GSEA_4.3.2/GSEA_4.3.2/gsea-cli.bat"
+#working_directory = ("C:/Users/Amir/gsea_home/output/apr01")
+
+wd = setwd("C:/Users/Amir/gsea_home/output/apr01")
+gsea_directory = paste(wd,"my_analysis_A3.GseaPreranked.1680385587240", sep = "/")
+#gsea_directory <- list.files(path = file.path(getwd(), "results"), 
+#                                 pattern = "\\.GseaPreranked")
+analysis_name <- "C:/Users/Amir/gsea_home/output/apr01/my_analysis_A3.GseaPreranked.1680385587240/my_analysis_A3.GseaPreranked.1680385587240.rpt"
+
+rank_file <- "C:/Users/Amir/gsea_home/output/apr01/my_analysis_A3.GseaPreranked.1680385587240/edb/CRC_ranked_genelist.rnk"
+```
+
+#```{r}
+#rnk_file <- params$rnk_file
+#```
+
+#```{r}
+#(GSEA)[http://software.broadinstitute.org/gsea/index.jsp] 
+#```
+
+
+
+
+
+#```{r}
+gsea_directory = paste(working_dir,"C:/Users/Amir/gsea_home/output/apr01/my_analysis_A3.GseaPreranked.1680385587240",sep="/")
+#```
+
+Default Enrichment Map Style:
+size of node corresponds to the size of the geneset
+colour of node corresponds to the phenotype and the p-value
+label of the node corresponds to the geneset description
+thickness of the edge corresponds to overlap statistic. The more genes two nodes
+have in common the thicker the edge.
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
