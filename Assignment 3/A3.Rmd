@@ -3,6 +3,72 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+# 1. Dataset selection
+
+## Insert and running required packages
+
+[@xie2018r]
+[@allaire2023rmarkdown]
+[@xie2020r]
+[@Zhu2021]
+[@Müller2023]
+[@Wickham2022]
+[@Davis2007]
+[@Morgan2022]
+[@zhu2008geometadb]
+[@durinck2009mapping]
+[@durinck2005biomart]
+[@drost2017biomartr]
+[@loraine2015analysis]
+[@robinson2010edger]
+[@Wickham2022dev]
+[@Dervieux2022]
+[@Xie2023kni]
+[@Xie2015kni]
+[@Stodden2014]
+
+```{r}
+if (!requireNamespace("rmarkdown", quietly = TRUE))
+    +     install.packages("rmarkdown")
+if (!requireNamespace("knitr", quietly = TRUE))
+    +     install.packages("knitr")
+if (!requireNamespace("pandoc", quietly = TRUE))
+    +     install.packages("pandoc")
+if (!requireNamespace("devtools", quietly = TRUE))
+    +     install.packages("devtools")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    +     install.packages("BiocManager")
+if (!requireNamespace("edgeR", quietly = TRUE))
+    BiocManager::install("edgeR")
+if (!requireNamespace("biomaRt", quietly = TRUE))
+    BiocManager::install("biomaRt")
+if (!requireNamespace("GEOmetadb", quietly = TRUE))
+    BiocManager::install("GEOmetadb")
+if (!requireNamespace("GEOquery", quietly = TRUE))
+    +     install.packages("GEOquery")
+if (!requireNamespace("DBI", quietly = TRUE))
+    +     install.packages("DBI")
+if (!requireNamespace("RSQLite", quietly = TRUE))
+    +     install.packages("RSQLite")
+if(!requireNamespace("kableExtra", quietly=TRUE))
+    install.packages("kableExtra")
+```
+
+```{r}
+library(devtools)
+library(rmarkdown)
+library(knitr)
+library(pandoc)
+library(BiocManager)
+library(GEOmetadb)
+library(GEOquery)
+library(DBI)
+library(RSQLite)
+library(edgeR)
+library(biomaRt)
+library(kableExtra)
+```
+
 ```{r}
 if (!requireNamespace("RCurl", quietly = TRUE))
     +     install.packages("RCurl")
@@ -14,6 +80,10 @@ if (!require("RCy3", quietly = TRUE))
 if (!require("ggplot2", quietly = TRUE))
     install.packages("ggplot2")
 
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("EnrichmentBrowser")
 ```
 
 ```{r}
@@ -39,13 +109,35 @@ close(tc)
 rx = gregexpr("(?<=<a href=\")(.*.GOBP_AllPathways_no_GO_iea.*.)(.gmt)(?=\">)", contents,
     perl = TRUE)
 gmt_file = unlist(regmatches(contents, rx))
-dest_gmt_file <- file.path("", gmt_file)
+dest_gmt_file <- file.path("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/data_dir", gmt_file)
 download.file(paste(gmt_url, gmt_file, sep = ""), destfile = dest_gmt_file)
 ```
+
+```{r}
+controls_g <- read.delim("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/control_vs_treatmentA.GseaPreranked.1680880549834/gsea_report_for_na_pos_1680880549834.tsv", header = TRUE)
+
+controls_g <- controls_g[, !(names(controls_g) %in% c("GS.br..follow.link.to.MSigDB", "GS.DETAILS", "X"))]
+kable(head(controls_g, n = 5), type="html", caption = "Table 1. Head of positive enrichment GSEA results for controls", row.names = FALSE) %>%
+  kable_styling()
+```
+
+```{r}
+treatmentA_g <- read.delim("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/control_vs_treatmentA.GseaPreranked.1680880549834/gsea_report_for_na_neg_1680880549834.tsv", header = TRUE)
+
+treatmentA_g <- treatmentA_g[, !(names(controls_g) %in% c("GS.br..follow.link.to.MSigDB", "GS.DETAILS", "X"))]
+kable(head(treatmentA_g, n = 5), type="html", caption = "Table 2. Head of Negative enrichment GSEA results for treatmentA", row.names = FALSE) %>%
+  kable_styling()
+
+```
+
+
 
 #```{r}
 #qlf_output_hits_withgn_ranked <- qlf_output_hits_withgn[,c(1,8)]
 #```
+
+
+
 
 ```{r}
 #knitr::opts_chunk$set(
@@ -56,17 +148,77 @@ download.file(paste(gmt_url, gmt_file, sep = ""), destfile = dest_gmt_file)
 #kinter:: opts_knit$set(root.dir = '/tmp')
 gsea_jar <- "C:/Users/Amir/Downloads/GSEA_4.3.2/GSEA_4.3.2/gsea-cli.bat"
 java_version <- 11
-#run_gsea <- $ "C:/Users/Amir/Downloads/GSEA_4.3.2/GSEA_4.3.2/gsea-cli.bat"
+run_gsea = "C:/Users/Amir/Downloads/GSEA_4.3.2/GSEA_4.3.2/gsea.bat"
 #working_directory = ("C:/Users/Amir/gsea_home/output/apr01")
 
-wd = setwd("C:/Users/Amir/gsea_home/output/apr01")
-gsea_directory = paste(wd,"my_analysis_A3.GseaPreranked.1680385587240", sep = "/")
+working_directory = setwd("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/control_vs_treatmentA.GseaPreranked.1680880549834")
+gsea_directory = paste(working_directory,"control_vs_treatmentA.GseaPreranked.1680880549834", sep = "/")
 #gsea_directory <- list.files(path = file.path(getwd(), "results"), 
 #                                 pattern = "\\.GseaPreranked")
-analysis_name <- "C:/Users/Amir/gsea_home/output/apr01/my_analysis_A3.GseaPreranked.1680385587240/my_analysis_A3.GseaPreranked.1680385587240.rpt"
+analysis_name <- "C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/control_vs_treatmentA.GseaPreranked.1680880549834.rpt"
 
-rank_file <- "C:/Users/Amir/gsea_home/output/apr01/my_analysis_A3.GseaPreranked.1680385587240/edb/CRC_ranked_genelist.rnk"
+rank_file <- "C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/ranked_gene_list_na_pos_versus_na_neg_1680880549834.tsv"
+
+espression_file <- "C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Project_data/CRC_ranked_genelist.rnk" 
+
+#if(run_gsea && java_version == "11"){
+#  command <- paste("",gsea_jar,  "GSEAPreRanked -gmx", dest_gmt_file, "-rnk" #,file.path(working_dir,rnk_file), "-collapse false -nperm 1000 -scoring_scheme #weighted -rpt_label ",analysis_name,"  -plot_top_x 20 -rnd_seed 12345  -set_max #200 -set_min 15 -zip_report false -out" ,working_dir, " > gsea_output.txt",sep=" #")
+#  system(command)
+command <- paste("java  -Xmx1G -cp",gsea_jar,  "xtools.gsea.GseaPreranked -gmx", dest_gmt_file, "-rnk" ,file.path(working_directory,rank_file), "-collapse false -nperm 1000 -permute gene_set -scoring_scheme weighted -rpt_label ",analysis_name,"  -num 100 -plot_top_x 20 -rnd_seed 12345  -set_max 200 -set_min 15 -zip_report false -out" ,working_directory, "-gui false > gsea_output.txt",sep=" ")
+
+gsea_output_dir <- gsea_directory
+
+cytoscapePing()
+cytoscapeVersionInfo()
+
+pvalue_gsea_threshold <- "0.05"
+qvalue_gsea_threshold <- "0.01"
+similarity_threshold <- "0.375"
+similarity_metric = "COMBINED"
+cur_model_name <- analysis_name
+gsea_results_path <- file.path(gsea_output_dir,"edb")
+gsea_results_filename <- file.path(gsea_results_path,"results.edb")
+
+gmt_gsea_file <- file.path(getwd(),dest_gmt_file)
+gsea_ranks_file <- file.path(gsea_results_path,list.files(gsea_results_path,pattern=".rnk"))
+
+
+current_network_name <- paste(cur_model_name,pvalue_gsea_threshold,qvalue_gsea_threshold,sep="_")
+em_command = paste('enrichmentmap build analysisType="gsea" gmtFile=',gmt_gsea_file,
+                   'pvalue=',pvalue_gsea_threshold, 'qvalue=',qvalue_gsea_threshold,
+                   'similaritycutoff=',similarity_threshold,
+                   'coefficients=',similarity_metric,'ranksDataset1=', 
+                   gsea_ranks_file,'enrichmentsDataset1=',gsea_results_filename, 
+                   'filterByExpressions=false',
+                   'expressionDataset1=',file.path(getwd(),working_directory,espression_file),
+                   sep=" ")
+
+
+response <- commandsGET(em_command)
+current_network_suid <- 0
+
+current_names <- getNetworkList()
+output_network_file <- file.path(getwd(),"initial_screenshot_network.png")
+response <- exportImage(output_network_file, type = "png")
+
+htmltools::img(src = knitr::image_uri(output_network_file), 
+               alt = 'Initial Enrichment Map', 
+               style = 'margin:0px auto;display:block')
 ```
+
+
+```{r}
+if(run_gsea && java_version == "11"){
+  command <- paste("",gsea_jar,  "GSEAPreRanked -gmx", dest_gmt_file, "-rnk" ,file.path(working_dir,rnk_file), "-collapse false -nperm 1000 -scoring_scheme weighted -rpt_label ",analysis_name,"  -plot_top_x 20 -rnd_seed 12345  -set_max 200 -set_min 15 -zip_report false -out" ,working_dir, " > gsea_output.txt",sep=" ")
+  system(command)
+} else if (run_gsea) {
+  command <- paste("java  -Xmx1G -cp",gsea_jar,  "xtools.gsea.GseaPreranked -gmx", dest_gmt_file, "-rnk" ,file.path(working_dir,rnk_file), "-collapse false -nperm 1000 -permute gene_set -scoring_scheme weighted -rpt_label ",analysis_name,"  -num 100 -plot_top_x 20 -rnd_seed 12345  -set_max 200 -set_min 15 -zip_report false -out" ,working_dir, "-gui false > gsea_output.txt",sep=" ")
+  system(command)
+}
+```
+
+
+
 
 #```{r}
 #rnk_file <- params$rnk_file
