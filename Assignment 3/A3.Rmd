@@ -72,18 +72,22 @@ library(kableExtra)
 ```{r}
 if (!requireNamespace("RCurl", quietly = TRUE))
     +     install.packages("RCurl")
+#if (!require("BiocManager", quietly = TRUE))
+  #  install.packages("BiocManager")
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
+
+BiocManager::install("RCy3")
 
 if (!require("RCy3", quietly = TRUE))
     install.packages("RCy3")
 if (!require("ggplot2", quietly = TRUE))
     install.packages("ggplot2")
 
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+#if (!require("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
 
-BiocManager::install("EnrichmentBrowser")
+#lirbBiocManager::install("EnrichmentBrowser")
 ```
 
 ```{r}
@@ -109,12 +113,12 @@ close(tc)
 rx = gregexpr("(?<=<a href=\")(.*.GOBP_AllPathways_no_GO_iea.*.)(.gmt)(?=\">)", contents,
     perl = TRUE)
 gmt_file = unlist(regmatches(contents, rx))
-dest_gmt_file <- file.path("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/data_dir", gmt_file)
+dest_gmt_file <- file.path("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/data_dir", gmt_file)
 download.file(paste(gmt_url, gmt_file, sep = ""), destfile = dest_gmt_file)
 ```
 
 ```{r}
-controls_g <- read.delim("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/control_vs_treatmentA.GseaPreranked.1680880549834/gsea_report_for_na_pos_1680880549834.tsv", header = TRUE)
+controls_g <- read.delim("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/control_vs_treatmentA.GseaPreranked.1680983057326/gsea_report_for_na_pos_1680983057326.tsv", header = TRUE)
 
 controls_g <- controls_g[, !(names(controls_g) %in% c("GS.br..follow.link.to.MSigDB", "GS.DETAILS", "X"))]
 kable(head(controls_g, n = 5), type="html", caption = "Table 1. Head of positive enrichment GSEA results for controls", row.names = FALSE) %>%
@@ -122,7 +126,7 @@ kable(head(controls_g, n = 5), type="html", caption = "Table 1. Head of positive
 ```
 
 ```{r}
-treatmentA_g <- read.delim("C:/Users/Amir/Documents/Maryam/R_1/R_Exercise-BasicSetup/Result_data/control_vs_treatmentA.GseaPreranked.1680880549834/gsea_report_for_na_neg_1680880549834.tsv", header = TRUE)
+treatmentA_g <- read.delim("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/control_vs_treatmentA.GseaPreranked.1680983057326/gsea_report_for_na_neg_1680983057326.tsv", header = TRUE)
 
 treatmentA_g <- treatmentA_g[, !(names(controls_g) %in% c("GS.br..follow.link.to.MSigDB", "GS.DETAILS", "X"))]
 kable(head(treatmentA_g, n = 5), type="html", caption = "Table 2. Head of Negative enrichment GSEA results for treatmentA", row.names = FALSE) %>%
