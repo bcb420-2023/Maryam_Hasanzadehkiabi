@@ -146,13 +146,8 @@ In the resulted map, there are 111 nodes and 367 edges.
 
 A screenshot is displayed below.
 
-```{r}
-EM_criteria <- file.path(getwd(),"EM_criteria.png")
-response <- exportImage(EM_criteria, type = "png")
-
-htmltools::img(src = knitr::image_uri(EM_criteria), 
-               alt = 'Enrichment Map Criteria', 
-               style = 'margin:0px auto;display:block')
+```{r echo=FALSE, out.width = "50%", fig.align = "center"}
+knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/EM_criteria.png")
 ```
 
 
@@ -219,30 +214,30 @@ em_command = paste('enrichmentmap build analysisType="gsea" gmtFile=',gmt_gsea_f
                    sep=" ")
 
 
+
+knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/initial_screenshot_network.png")
+
+
+
 #response <- commandsGET(em_command)
-current_network_suid <- 0
+#current_network_suid <- 0
 
 
-current_names <- getNetworkList()
-output_network_file <- file.path(getwd(),"initial_screenshot_network.png")
-response <- exportImage(output_network_file, type = "png")
+#current_names <- getNetworkList()
+#output_network_file <- file.path(getwd(),"initial_screenshot_network.png")
+#response <- exportImage(output_network_file, type = "png")
 
-htmltools::img(src = knitr::image_uri(output_network_file), 
-               alt = 'Initial Enrichment Map', 
-               style = 'margin:0px auto;display:block')
+#htmltools::img(src = knitr::image_uri(output_network_file), 
+#               alt = 'Initial Enrichment Map', 
+#               style = 'margin:0px auto;display:block')
 ```
 
 **2. Annotate your network - what parameters did you use to annotate the network. If you are using the default parameters make sure to list them as well.**
 
 An AutoAnnotated output was created and is displayed below (screen shot).
 
-```{r}
-AutoAnnotated <- file.path(getwd(),"AutoAnnotated.png")
-response <- exportImage(output_network_file, type = "png")
-
-htmltools::img(src = knitr::image_uri(AutoAnnotated), 
-               alt = 'Initial Enrichment Map', 
-               style = 'margin:0px auto;display:block')
+```{r echo=FALSE, out.width = "50%", fig.align = "center"}
+knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/AutoAnnotated.png")
 ```
 
 **3. Make a publica"on ready figure - include this figure with proper legends in your notebook.**
@@ -250,13 +245,9 @@ htmltools::img(src = knitr::image_uri(AutoAnnotated),
 
 Another annotation using parameters as Cluster algorithm: MCL Cluster, Edge weight column: similarity_coefficient, singleton clusters, prevent cluster overlap, Lable column: GS_DESCR, Lable algorithm: WordCloud (Adjacent Words), max words: 3, min word: 1, Adjacent word: 8, was performed and the screen shot is shown below
 
-```{r}
-Annotated <- file.path(getwd(),"Annotated.png")
-response <- exportImage(output_network_file, type = "png")
+```{r echo=FALSE, out.width = "50%", fig.align = "center"}
+knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/Annotated.png")
 
-htmltools::img(src = knitr::image_uri(Annotated), 
-               alt = 'Initial Enrichment Map', 
-               style = 'margin:0px auto;display:block')
 ```
 
 **4. Collapse your network to a theme network. What are the major themes present in this analysis? Do they fit with the model? Are there any novel pathways or themes?**
@@ -264,13 +255,8 @@ htmltools::img(src = knitr::image_uri(Annotated),
 
 By using filter in control panel, a sub-network was created. The new sub-network includes 2 clusters rRNA processing cytosol that contains 22 genes, and RNA 3' end that contains 2 genes. It is displayed below
 
-```{r}
-subnet_annotation <- file.path(getwd(),"subnet_annotation.png")
-response <- exportImage(output_network_file, type = "png")
-
-htmltools::img(src = knitr::image_uri(subnet_annotation), 
-               alt = 'Initial Enrichment Map', 
-               style = 'margin:0px auto;display:block')
+```{r echo=FALSE, out.width = "50%", fig.align = "center"}
+knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/subnet_annotation.png")
 ```
 
 # Interpreta"on and detailed view of results
@@ -288,27 +274,10 @@ model). What does this post analysis show?**
 
 Since the main study was conducted to determine the effect of some drugs on different groups of colon cancer [@schmidt2018targeting], a post analysis using drugs was performed over the network. Human_DrugBank_all_symbol was downloaded and used as signature gene sets. Some drugs such as COPPER, CHOLIC ACID, GELDANAMYCIN, and ARTENIMOL were found as significantly interacted with different genes and pathways in the study (screenshot is provided below). There are few studies that provide supports for these substances in the treatment of cancers [@ni2019prediction], [@barka2016taxonomy], [@sung2023natural], [@hammood2021assess].
 
-```{r}
-drugbank <- file.path(getwd(),"drugbank.png")
-response <- exportImage(output_network_file, type = "png")
-
-htmltools::img(src = knitr::image_uri(drugbank), 
-               alt = 'Post Analysis', 
-               style = 'margin:0px auto;display:block')
+```{r echo=FALSE, out.width = "50%", fig.align = "center"}
+knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/drugbank.png")
 ```
 
 
+# References
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
-```{r}
-plot(cars)
-```
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
