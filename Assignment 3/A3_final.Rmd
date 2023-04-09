@@ -240,7 +240,7 @@ An AutoAnnotated output was created and is displayed below (screen shot).
 knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/AutoAnnotated.png")
 ```
 
-**3. Make a publica"on ready figure - include this figure with proper legends in your notebook.**
+**3. Make a publication ready figure - include this figure with proper legends in your notebook.**
 
 
 Another annotation using parameters as Cluster algorithm: MCL Cluster, Edge weight column: similarity_coefficient, singleton clusters, prevent cluster overlap, Lable column: GS_DESCR, Lable algorithm: WordCloud (Adjacent Words), max words: 3, min word: 1, Adjacent word: 8, was performed and the screen shot is shown below
@@ -259,7 +259,7 @@ By using filter in control panel, a sub-network was created. The new sub-network
 knitr::include_graphics("/Users/maryamhasanzadehkiabi/Documents/BCB420/Maryam_Hasanzadehkiabi/Assignment 3/result_data/subnet_annotation.png")
 ```
 
-# Interpreta"on and detailed view of results
+# Interpretation and detailed view of results
 
 **1. Do the enrichment results support conclusions or mechanism discussed in the original paper? How do these results differ from the results you got from Assignment #2 thresholded methods**
 
