@@ -24,8 +24,8 @@ A2 Journal:
 
 # Assignment 3:
 
-A3 HTML:
+A3 HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%203/A3_Maryam:Hasanzadehkiabi.nb.html
 
-A3 .RMD notebook:
+A3 .RMD notebook: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%203/A3_Maryam:Hasanzadehkiabi.Rmd
 
 A3 Journal: 
