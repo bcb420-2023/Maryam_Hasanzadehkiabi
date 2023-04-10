@@ -28,4 +28,6 @@ A3 HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignm
 
 A3 .RMD notebook: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%203/A3_Maryam:Hasanzadehkiabi.Rmd
 
+A3 .RMD (on windows version): https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%203/A3_final_on_windows.Rmd
+
 A3 Journal: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/wiki/Assignment-3
