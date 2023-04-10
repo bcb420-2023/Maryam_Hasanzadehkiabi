@@ -10,7 +10,7 @@ A1	HTML (final): https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main
 
 A1 .RMD (final) : https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment_1_final.Rmd
 
-A1 journal: 
+A1 journal: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/wiki/Assignment-1
 
 
 # Assignment 2:
@@ -19,13 +19,13 @@ A2 HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignm
 
 A2 .RMD Notebook: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%202/A2_MaryamHasanzadehkiabi.Rmd
 
-A2 Journal: 
+A2 Journal: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/wiki/Assignment-2
 
 
 # Assignment 3:
 
-A3 HTML:
+A3 HTML: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%203/A3_Maryam:Hasanzadehkiabi.nb.html
 
-A3 .RMD notebook:
+A3 .RMD notebook: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/blob/main/Assignment%203/A3_Maryam:Hasanzadehkiabi.Rmd
 
-A3 Journal: 
+A3 Journal: https://github.com/bcb420-2023/Maryam_Hasanzadehkiabi/wiki/Assignment-3
